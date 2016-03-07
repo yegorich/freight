@@ -1,0 +1,49 @@
+<h1 id="freight">Freight</h1>
+<p>A modern take on the Debian archive.</p>
+<h2 id="usage">Usage</h2>
+<p>Install Freight and create a minimal configuration in <code>/usr/local/etc/freight.conf</code> or <code>/etc/freight.conf</code> as appropriate containing the name of your GPG key:</p>
+<pre><code>GPG=&quot;example@example.com&quot;</code></pre>
+<p>Add packages to particular distros:</p>
+<pre><code>freight add foobar_1.2.3-1_all.deb apt/squeeze apt/lucid apt/natty</code></pre>
+<p>Build the cache of all the files needed to be accepted as a Debian archive:</p>
+<pre><code>freight cache</code></pre>
+<p>Serve <code>/var/cache/freight</code> via your favorite web server and install it as an APT source:</p>
+<pre><code>echo &quot;deb http://example.com $(lsb_release -sc) main&quot; | sudo tee /etc/apt/sources.list.d/example.list
+sudo wget -O /etc/apt/trusted.gpg.d/example.gpg http://example.com/keyring.gpg
+sudo apt-get update
+sudo apt-get -y install foobar</code></pre>
+<h2 id="installation">Installation</h2>
+<h3 id="from-source">From source</h3>
+<pre><code>git clone git://github.com/rcrowley/freight.git
+cd freight &amp;&amp; make &amp;&amp; sudo make install</code></pre>
+<h3 id="from-a-debian-archive">From a Debian archive</h3>
+<pre><code>echo &quot;deb http://packages.rcrowley.org $(lsb_release -sc) main&quot; | sudo tee /etc/apt/sources.list.d/rcrowley.list
+sudo wget -O /etc/apt/trusted.gpg.d/rcrowley.gpg http://packages.rcrowley.org/keyring.gpg
+sudo apt-get update
+sudo apt-get -y install freight</code></pre>
+<h3 id="from-fedoraepel-repositories">From Fedora/EPEL repositories</h3>
+<p>EL users must first <a href="http://fedoraproject.org/wiki/EPEL/FAQ#How_can_I_install_the_packages_from_the_EPEL_software_repository.3F">configure EPEL</a>.</p>
+<pre><code>yum -y install freight</code></pre>
+<h2 id="documentation">Documentation</h2>
+<ul>
+<li><a href="http://rcrowley.org/articles/packaging.html">Debian packaging for busy people</a></li>
+</ul>
+<p>There's also <a href="http://blog.valouille.fr/2014/03/creer-un-depot-debian-signe-avec-freight/">French documentation</a> assembled by Valérian Beaudoin.</p>
+<h2 id="manuals">Manuals</h2>
+<ul>
+<li><a href="http://rcrowley.github.com/freight/freight.1.html"><code>freight</code>(1)</a></li>
+<li><a href="http://rcrowley.github.com/freight/freight-add.1.html"><code>freight-add</code>(1)</a></li>
+<li><a href="http://rcrowley.github.com/freight/freight-cache.1.html"><code>freight-cache</code>(1)</a></li>
+<li><a href="http://rcrowley.github.com/freight/freight.5.html"><code>freight</code>(5)</a></li>
+</ul>
+<h2 id="contribute">Contribute</h2>
+<p>Freight is <a href="https://github.com/rcrowley/freight/blob/master/LICENSE">BSD-licensed</a></p>
+<ul>
+<li>Source code: <a href="https://github.com/rcrowley/freight" class="uri">https://github.com/rcrowley/freight</a></li>
+<li>Issue tracker: <a href="https://github.com/rcrowley/freight/issues" class="uri">https://github.com/rcrowley/freight/issues</a></li>
+<li>Wiki: <a href="https://github.com/rcrowley/freight/wiki" class="uri">https://github.com/rcrowley/freight/wiki</a></li>
+</ul>
+<h3 id="test-suite">Test suite</h3>
+<p><a href="https://travis-ci.org/freight-team/freight"><img src="https://travis-ci.org/domcleal/freight.svg?branch=master" alt="Build Status" /></a></p>
+<p>The Freight test suite can be executed by running <code>test/run.sh</code> from any git checkout of this repository. git and GnuPG are required for most tests, and extended tests require apt.</p>
+<p>Contributions should include a new test case where possible by extending one or more of the <code>test/*.bats</code> files.</p>

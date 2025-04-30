@@ -56,7 +56,7 @@ apt_source_origversion() {
 # Print the prefix for a package name.
 apt_prefix() {
     [ "$(echo "$1" | cut -c1-3)" = "lib" ] && C=4 || C=1
-    echo "$1" | cut -c-$C
+    echo "$1" | cut "-c-$C"
 }
 
 # Print the checksum portion of the normal checksumming programs' output.

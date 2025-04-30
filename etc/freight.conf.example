@@ -12,8 +12,8 @@ LABEL="Freight"
 NOT_AUTOMATIC="no"
 BUT_AUTOMATIC_UPGRADES="no"
 
-# Cache the control files after each run (on), or regenerate them every
-# time (off).
+# Cache the control files and hashes after each run (on), or regenerate
+# them every time (off).
 CACHE="off"
 
 # GPG key(s) to use to sign repositories.  This is required by the `apt`

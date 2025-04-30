@@ -79,19 +79,27 @@ apt_filesize() {
 }
 
 # Compute the hash of type $1 for source file $2. If the file has a
-# corresponding `.$filename-$method` file the hash in this file will be returned
+# corresponding `$3-$method` file the hash in this file will be returned
 # instead. The hash will also be recomputed if the source file is newer than the
-# hash file.
+# hash file. If $3 is empty this implies that cache is disabled and so no
+# cache file will be used.
 apt_hash() {
     method="$1"
     f="$2"
-    h="$(dirname "$f")/.$(basename "$f").${method}"
+    hashroot="$3"
 
-    if [ ! -f "$h" ] || test "$f" -nt "$h"; then
-        eval "apt_${method}" "$f" > "$h"
+    if [ "$hashroot" = "" ]; then
+        # Cache disabled
+        eval "apt_${method}" "$f"
+    else
+        # Cache enabled
+        h="$hashroot-$method"
+        if [ ! -f "$h" ] || test "$f" -nt "$h"; then
+            eval "apt_${method}" "$f" > "$h"
+        fi
+        cat "${h}"
     fi
 
-    cat "${h}"
 }
 
 # Setup the repository for the distro named in the first argument,
@@ -105,6 +113,9 @@ apt_cache() {
     # Generate a timestamp to use in this build's directory name.
     DATE="$(date +%Y%m%d%H%M%S%N)"
     DISTCACHE="$VARCACHE/dists/$DIST-$DATE"
+
+    # Cached hashes will live in the freight var lib directory.
+    HASHDIR="$VARLIB/.apt/$DIST"
 
     # For a Debian archive, each distribution needs at least this directory
     # structure in place.  The directory for this build must not exist,
@@ -199,11 +210,17 @@ EOF
         # In the future, `Sources` may find a place here, too.
         find "$DISTCACHE" -mindepth 2 -type f -not -name '.*' -printf %P\\n |
             while read -r FILE; do
+                if [ "$CACHE" = "on" ]; then
+                    HASHFILEROOT="$HASHDIR/$FILE"
+                    mkdir -p "$(dirname "$HASHFILEROOT")"
+                else
+                    HASHFILEROOT=""
+                fi
                 SIZE="$(apt_filesize "$DISTCACHE/$FILE")"
-                echo " $(apt_hash md5 "$DISTCACHE/$FILE") $SIZE $FILE" >&3
-                echo " $(apt_hash sha1 "$DISTCACHE/$FILE") $SIZE $FILE" >&4
-                echo " $(apt_hash sha256 "$DISTCACHE/$FILE") $SIZE $FILE" >&5
-                echo " $(apt_hash sha512 "$DISTCACHE/$FILE") $SIZE $FILE" >&6
+                echo " $(apt_hash md5 "$DISTCACHE/$FILE" "$HASHFILEROOT") $SIZE $FILE" >&3
+                echo " $(apt_hash sha1 "$DISTCACHE/$FILE" "$HASHFILEROOT") $SIZE $FILE" >&4
+                echo " $(apt_hash sha256 "$DISTCACHE/$FILE" "$HASHFILEROOT") $SIZE $FILE" >&5
+                echo " $(apt_hash sha512 "$DISTCACHE/$FILE" "$HASHFILEROOT") $SIZE $FILE" >&6
             done 3>"$TMP/md5sums" 4>"$TMP/sha1sums" 5>"$TMP/sha256sums" 6>"$TMP/sha512sums"
         echo "MD5Sum:"
         cat "$TMP/md5sums"
@@ -278,6 +295,8 @@ apt_clear_cache() {
     find "$VARLIB/apt/$DIST" -name '*-control' -print0 | xargs -0 --no-run-if-empty rm
     # Next remove the source control cache
     find "$VARLIB/apt/$DIST" -name '*-cached' -print0 | xargs -0 --no-run-if-empty rm
+    # Finally remove the cached hashes
+    rm -fr "$VARLIB/.apt/$DIST"
 }
 
 # Add a binary package to the given dist and to the pool.
